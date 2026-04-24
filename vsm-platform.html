@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VSM Studio — Value Stream Mapping Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f7f7f5;
+    --surface2: #efefec;
+    --border: #e0e0db;
+    --text: #1a1a18;
+    --text2: #5a5a55;
+    --text3: #9a9a95;
+    --accent: #d94f2b;
+    --accent2: #e8734a;
+    --accent-light: #fff0ec;
+    --blue: #2b5fd9;
+    --blue-light: #eef2ff;
+    --green: #2ba05a;
+    --green-light: #edfaf4;
+    --yellow: #d9a02b;
+    --yellow-light: #fffbee;
+    --purple: #7b2bd9;
+    --purple-light: #f5eeff;
+    --mono: 'DM Mono', monospace;
+    --display: 'Syne', sans-serif;
+    --body: 'DM Sans', sans-serif;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--text);
+    color: white;
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  }
+  .logo {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent2); }
+  .step-nav {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.5);
+    background: transparent;
+  }
+  .step-dot.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .step-dot.done {
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.8);
+  }
+  .step-connector {
+    width: 20px;
+    height: 1px;
+    background: rgba(255,255,255,0.2);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .shell {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 62px);
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 20px;
+    position: sticky;
+    top: 62px;
+    height: calc(100vh - 62px);
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    margin-bottom: 28px;
+  }
+  .sidebar-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13.5px;
+    color: var(--text2);
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-item.active {
+    background: var(--accent-light);
+    border-color: #f5c4b8;
+    color: var(--accent);
+  }
+  .sidebar-item .icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    padding: 36px 44px;
+    overflow-y: auto;
+    max-height: calc(100vh - 62px);
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-title {
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .page-subtitle {
+    color: var(--text2);
+    font-size: 14px;
+    margin-bottom: 32px;
+    max-width: 600px;
+  }
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--accent-light);
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.full { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .field input,
+  .field textarea,
+  .field select {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-family: var(--body);
+    font-size: 14px;
+    color: var(--text);
+    background: white;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    resize: vertical;
+  }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(217, 79, 43, 0.08);
+  }
+  .field textarea { min-height: 90px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--body);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    outline: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #c44324; }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+  }
+  .btn-ghost:hover { background: var(--accent-light); }
+  .btn-sm { padding: 6px 14px; font-size: 12.5px; }
+  .btn-danger {
+    background: #fff0ee;
+    color: #c44324;
+    border: 1.5px solid #f5c4b8;
+  }
+  .btn-danger:hover { background: #fde8e3; }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 28px;
+    align-items: center;
+  }
+
+  /* ── TEAM SECTION ── */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .team-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    background: white;
+    transition: all 0.15s;
+    cursor: pointer;
+    position: relative;
+  }
+  .team-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .team-card .role-icon { font-size: 22px; margin-bottom: 6px; }
+  .team-card .role-name {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+    font-family: var(--display);
+  }
+  .team-card .role-desc {
+    font-size: 11.5px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+  .team-card .check {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: none;
+    align-items: center; justify-content: center;
+    color: white;
+    font-size: 10px;
+  }
+  .team-card.selected .check { display: flex; }
+
+  /* ── PROCESS BLOCKS ── */
+  .process-builder {
+    background: var(--surface);
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .process-list { display: flex; flex-direction: column; gap: 10px; }
+  .process-block {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 32px 1fr 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+    box-shadow: var(--shadow);
+    transition: all 0.15s;
+  }
+  .process-block:hover { box-shadow: var(--shadow-lg); border-color: #ccc; }
+  .block-number {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .block-input {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: var(--body);
+    color: var(--text);
+    background: var(--surface);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .block-input:focus { border-color: var(--accent); background: white; }
+  .metric-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .metric-badge span:first-child {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── VSM DIAGRAM ── */
+  #vsm-diagram-container {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    overflow-x: auto;
+    min-height: 280px;
+    box-shadow: var(--shadow);
+  }
+  .vsm-diagram {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    min-width: max-content;
+    padding: 20px 10px;
+  }
+  .vsm-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    min-width: 130px;
+  }
+  .vsm-box {
+    width: 120px;
+    min-height: 70px;
+    border-radius: 8px;
+    border: 2px solid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    text-align: center;
+    position: relative;
+  }
+  .vsm-box.normal { border-color: var(--accent); background: var(--accent-light); }
+  .vsm-box.problem { border-color: #d94f2b; background: #fff0ec; }
+  .vsm-box.start { border-color: var(--blue); background: var(--blue-light); }
+  .vsm-box.end { border-color: var(--green); background: var(--green-light); }
+
+  .vsm-box-title {
+    font-family: var(--display);
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+  .vsm-metrics {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .vsm-metric {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.06);
+  }
+  .vsm-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    padding-top: 25px;
+  }
+  .vsm-arrow-line {
+    height: 2px;
+    width: 30px;
+    background: var(--text3);
+    position: relative;
+  }
+  .vsm-arrow-line::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: -4px;
+    border: 5px solid transparent;
+    border-left-color: var(--text3);
+  }
+  .vsm-wait {
+    position: absolute;
+    bottom: -22px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  .problem-flag {
+    width: 18px; height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: absolute;
+    top: -8px; right: -8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 10px;
+  }
+
+  /* ── METRICS SUMMARY ── */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .metric-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .metric-card .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .metric-card .value {
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-card .sub {
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .metric-card.accent { border-color: var(--accent); }
+  .metric-card.accent .value { color: var(--accent); }
+  .metric-card.blue { border-color: var(--blue); }
+  .metric-card.blue .value { color: var(--blue); }
+  .metric-card.green { border-color: var(--green); }
+  .metric-card.green .value { color: var(--green); }
+
+  /* ── PROBLEMS ── */
+  .problem-item {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+  .problem-item .p-name {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+  .problem-item .p-meta {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+  .severity-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+  .sev-high { background: #fde8e3; color: #c44324; }
+  .sev-med { background: var(--yellow-light); color: #9a6e00; }
+  .sev-low { background: var(--green-light); color: var(--green); }
+
+  /* ── TOOLS ── */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .tool-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    background: white;
+  }
+  .tool-card:hover { border-color: var(--blue); background: var(--blue-light); }
+  .tool-card.selected { border-color: var(--blue); background: var(--blue-light); }
+  .tool-card .t-icon { font-size: 24px; margin-bottom: 6px; }
+  .tool-card .t-name { font-weight: 700; font-size: 13px; font-family: var(--display); }
+  .tool-card .t-desc { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+  /* ── REPORT / SUMMARY ── */
+  .report-section {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .report-section h3 {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .report-table th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    padding: 8px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .report-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .report-table tr:last-child td { border-bottom: none; }
+  .report-table tr:hover td { background: var(--surface); }
+
+  .insight-box {
+    background: var(--accent-light);
+    border: 1.5px solid #f5c4b8;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-top: 14px;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    aside { display: none; }
+    .shell { grid-template-columns: 1fr; }
+    main { max-height: none; overflow: visible; }
+    header .step-nav { display: none; }
+    .btn-row { display: none; }
+    .page { display: block !important; page-break-before: always; }
+    .page:first-child { page-break-before: auto; }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    aside { display: none; }
+    main { padding: 20px; }
+    .metrics-row { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .process-block { grid-template-columns: 32px 1fr; }
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 30px; right: 30px;
+    background: var(--text);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text3);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+  .empty-state p { font-size: 13.5px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">VSM <span>Studio</span></div>
+  <div class="step-nav" id="stepNav"></div>
+</header>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Workflow</div>
+      <div class="sidebar-item active" data-step="0" onclick="goTo(0)">
+        <span class="icon">📋</span> Case Study
+      </div>
+      <div class="sidebar-item" data-step="1" onclick="goTo(1)">
+        <span class="icon">👥</span> Team Members
+      </div>
+      <div class="sidebar-item" data-step="2" onclick="goTo(2)">
+        <span class="icon">🔲</span> Process Blocks
+      </div>
+      <div class="sidebar-item" data-step="3" onclick="goTo(3)">
+        <span class="icon">⚠️</span> Problems
+      </div>
+      <div class="sidebar-item" data-step="4" onclick="goTo(4)">
+        <span class="icon">🛠️</span> Tools
+      </div>
+      <div class="sidebar-item" data-step="5" onclick="goTo(5)">
+        <span class="icon">🗺️</span> VSM Diagram
+      </div>
+      <div class="sidebar-item" data-step="6" onclick="goTo(6)">
+        <span class="icon">📊</span> Full Report
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Actions</div>
+      <div class="sidebar-item" onclick="clearAll()">
+        <span class="icon">🗑️</span> Reset All
+      </div>
+      <div class="sidebar-item" onclick="window.print()">
+        <span class="icon">🖨️</span> Print Report
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- PAGE 0: CASE STUDY -->
+    <div class="page active" id="page0">
+      <div class="tag">Step 1 of 7</div>
+      <div class="page-title">Define Your Case Study</div>
+      <div class="page-subtitle">Start by describing the context, the customer request, and what value stream you want to map. This mirrors how Nordstrom identified the Cosmetics Business Office flow.</div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">🏢 Organization Context</div></div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Organization Name</label>
+            <input type="text" id="orgName" placeholder="e.g. Nordstrom, LinkedIn..." />
+          </div>
+          <div class="field">
+            <label>Industry</label>
+            <select id="industry">
+              <option value="">Select industry...</option>
+              <option>Retail</option><option>Technology</option><option>Finance</option>
+              <option>Healthcare</option><option>Manufacturing</option><option>Logistics</option>
+              <option>Government</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Value Stream Name</label>
+            <input type="text" id="vsName" placeholder="e.g. Product Line Registration Flow..." />
+          </div>
+          <div class="field">
+            <label>Customer / End User</label>
+            <input type="text" id="customer" placeholder="e.g. Department Managers, End Customers..." />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📌 Problem Statement</div></div>
+        <div class="form-grid full">
+          <div class="field">
+            <label>What business request triggers this value stream?</label>
+            <textarea id="triggerRequest" placeholder="e.g. A department manager submits a product line assignment request form to register a new salesperson..."></textarea>
+          </div>
+          <div class="field">
+            <label>What is the primary pain or bottleneck observed?</label>
+            <textarea id="painStatement" placeholder="e.g. Long lead times, rework, missing information, teams working in silos..."></textarea>
+          </div>
+          <div class="field">
+            <label>What outcome or improvement are you targeting?</label>
+            <textarea id="targetOutcome" placeholder="e.g. Reduce lead time from 10 weeks to 2 weeks, achieve 80% C/A rate..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📅 Project Scope</div></div>
+        <div class="form-grid cols3">
+          <div class="field">
+            <label>Current Lead Time (total)</label>
+            <input type="text" id="currentLT" placeholder="e.g. 10 weeks" />
+          </div>
+          <div class="field">
+            <label>Current Value-Added Time</label>
+            <input type="text" id="currentVA" placeholder="e.g. 7.5 days" />
+          </div>
+          <div class="field">
+            <label>Overall %C/A</label>
+            <input type="text" id="currentCA" placeholder="e.g. 8.6%" />
+          </div>
+          <div class="field">
+            <label>Target Lead Time</label>
+            <input type="text" id="targetLT" placeholder="e.g. 2 weeks" />
+          </div>
+          <div class="field">
+            <label>Target %C/A</label>
+            <input type="text" id="targetCA" placeholder="e.g. 80%" />
+          </div>
+          <div class="field">
+            <label>Target Date</label>
+            <input type="date" id="targetDate" />
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goTo(1)">Next: Team Members →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 1: TEAM -->
+    <div class="page" id="page1">
+      <div class="tag">Step 2 of 7</div>
+      <div class="page-title">Identify Your Team</div>
+      <div class="page-subtitle">Select all teams involved in your value stream. In DevOps, no single person knows all the work required — you need every function in the room.</div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 Standard Roles — Click to Select</div></div>
+        <div class="team-grid" id="teamGrid">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">➕ Add Custom Team Member</div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Role / Team Name</label>
+            <input type="text" id="customRole" placeholder="e.g. Data Engineering Team" />
+          </div>
+          <div class="field">
+            <label>Responsibility</label>
+            <input type="text" id="customResp" placeholder="e.g. Maintains data pipelines and warehouses" />
+          </div>
+          <div class="field">
+            <label>Key Contact / Owner</label>
+            <input type="text" id="customContact" placeholder="e.g. Jane Doe, Lead Engineer" />
+          </div>
+          <div class="field">
+            <label>Team Size</label>
+            <input type="number" id="customSize" placeholder="e.g. 5" min="1" />
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:14px">
+          <button class="btn btn-ghost btn-sm" onclick="addCustomTeam()">+ Add Team Member</button>
+        </div>
+        <div id="customTeamList" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goTo(0)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(2)">Next: Process Blocks →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 2: PROCESS BLOCKS -->
+    <div class="page" id="page2">
+      <div class="tag">Step 3 of 7</div>
+      <div class="page-title">Map Your Process Blocks</div>
+      <div class="page-subtitle">Define each step in your value stream. Use 5 to 15 high-level blocks. For each block, capture lead time, value-added time, and percent complete and accurate.</div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div style="font-size:13px; color:var(--text2);">Add process steps from left (customer request) to right (deployed to customer)</div>
+          <button class="btn btn-primary btn-sm" onclick="addProcessBlock()">+ Add Step</button>
+        </div>
+        <div style="display:grid; grid-template-columns: 32px 1.5fr 0.8fr 0.8fr 0.8fr auto; gap:8px; margin-bottom:8px; padding:0 4px;">
+          <div></div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Process Step</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Lead Time</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">VA Time</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">%C/A</div>
+          <div></div>
+        </div>
+        <div class="process-list" id="processList"></div>
+        <div id="processEmpty" class="empty-state" style="display:none;">
+          <div class="icon">🔲</div>
+          <p>No process steps yet. Click "+ Add Step" to begin mapping your flow.</p>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goTo(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(3)">Next: Problems →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 3: PROBLEMS -->
+    <div class="page" id="page3">
+      <div class="tag">Step 4 of 7</div>
+      <div class="page-title">Identify Problems and Waste</div>
+      <div class="page-subtitle">Document the issues found in each step. These are the "flags" on your value stream map — points of rework, waiting, missing information, or broken handoffs.</div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚠️ New Problem</div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Problem Description</label>
+            <input type="text" id="probDesc" placeholder="e.g. Employee number field left blank on form" />
+          </div>
+          <div class="field">
+            <label>Affected Process Step</label>
+            <select id="probStep">
+              <option value="">Select step...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Waste Type</label>
+            <select id="probType">
+              <option value="">Select type...</option>
+              <option>Rework / Defect</option>
+              <option>Waiting / Queue</option>
+              <option>Missing Information</option>
+              <option>Handoff Failure</option>
+              <option>Over-processing</option>
+              <option>Unnecessary Motion</option>
+              <option>Technical Debt</option>
+              <option>Manual Workaround</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Severity</label>
+            <select id="probSeverity">
+              <option value="high">High</option>
+              <option value="med">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column: 1/-1">
+            <label>Root Cause</label>
+            <textarea id="probCause" placeholder="e.g. Form was designed without checking if the data was available to the submitter..." style="min-height:70px;"></textarea>
+          </div>
+          <div class="field">
+            <label>Proposed Countermeasure</label>
+            <textarea id="probFix" placeholder="e.g. Remove employee number field, auto-populate from HR system..." style="min-height:70px;"></textarea>
+          </div>
+          <div class="field">
+            <label>Owner / Responsible Team</label>
+            <input type="text" id="probOwner" placeholder="e.g. IT Operations / Product Owner" />
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:14px">
+          <button class="btn btn-ghost btn-sm" onclick="addProblem()">+ Log Problem</button>
+        </div>
+      </div>
+
+      <div id="problemList"></div>
+      <div id="problemEmpty" class="empty-state">
+        <div class="icon">✅</div>
+        <p>No problems logged yet. Add the waste points you discovered in your VSM workshop.</p>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goTo(2)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(4)">Next: Tools →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 4: TOOLS -->
+    <div class="page" id="page4">
+      <div class="tag">Step 5 of 7</div>
+      <div class="page-title">Select Your Tools</div>
+      <div class="page-subtitle">Choose the tools your team uses to reinforce DevOps behavior — shared visibility, shared backlog, and fast feedback loops.</div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">🛠️ DevOps and Flow Tools — Click to Select</div></div>
+        <div class="tools-grid" id="toolsGrid">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">➕ Add Custom Tool</div></div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Tool Name</label>
+            <input type="text" id="customToolName" placeholder="e.g. Azure DevOps" />
+          </div>
+          <div class="field">
+            <label>Purpose</label>
+            <input type="text" id="customToolPurpose" placeholder="e.g. Work item tracking and CI/CD pipelines" />
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:14px">
+          <button class="btn btn-ghost btn-sm" onclick="addCustomTool()">+ Add Tool</button>
+        </div>
+        <div id="customToolList" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goTo(3)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(5)">Next: VSM Diagram →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 5: VSM DIAGRAM -->
+    <div class="page" id="page5">
+      <div class="tag">Step 6 of 7</div>
+      <div class="page-title">Value Stream Map</div>
+      <div class="page-subtitle">Visual representation of your value stream with process blocks, metrics, and problem flags. Problems are marked with a red indicator.</div>
+
+      <div class="metrics-row" id="summaryMetrics">
+        <!-- injected -->
+      </div>
+
+      <div id="vsm-diagram-container">
+        <div id="vsm-diagram" class="vsm-diagram"></div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔑 Legend</div></div>
+          <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:12.5px;">
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:18px;height:18px;border:2px solid var(--blue);background:var(--blue-light);border-radius:4px;"></div> Customer / Start</div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:18px;height:18px;border:2px solid var(--accent);background:var(--accent-light);border-radius:4px;"></div> Process Step</div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:18px;height:18px;border:2px solid var(--green);background:var(--green-light);border-radius:4px;"></div> Customer / End</div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:16px;height:16px;background:var(--accent);border-radius:50%;color:white;font-size:9px;display:flex;align-items:center;justify-content:center;">!</div> Has Problem(s)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goTo(4)">← Back</button>
+        <button class="btn btn-primary" onclick="buildReport(); goTo(6)">Generate Full Report →</button>
+      </div>
+    </div>
+
+    <!-- PAGE 6: REPORT -->
+    <div class="page" id="page6">
+      <div class="tag">Step 7 of 7</div>
+      <div class="page-title">Full VSM Report</div>
+      <div class="page-subtitle">Complete summary of your value stream mapping exercise. Use this for leadership review, improvement planning, or stakeholder communication.</div>
+
+      <div id="reportContent">
+        <!-- injected -->
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goTo(5)">← Back to Diagram</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Print Report</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── STATE ──
+const state = {
+  currentStep: 0,
+  selectedTeams: [],
+  customTeams: [],
+  processBlocks: [],
+  problems: [],
+  selectedTools: [],
+  customTools: []
+};
+
+const STEPS = [
+  'Case Study', 'Team', 'Process', 'Problems', 'Tools', 'Diagram', 'Report'
+];
+
+const TEAM_ROLES = [
+  { icon: '🧑‍💼', name: 'Product Owner', desc: 'Internal voice of the business defining next set of functionality' },
+  { icon: '💻', name: 'Development', desc: 'Team responsible for developing application functionality' },
+  { icon: '🔍', name: 'QA / Testing', desc: 'Ensures feedback loops exist and service functions as desired' },
+  { icon: '⚙️', name: 'IT Operations / SRE', desc: 'Maintains production environment and required service levels' },
+  { icon: '🔐', name: 'Infosec', desc: 'Team responsible for securing systems and data' },
+  { icon: '🚀', name: 'Release Manager', desc: 'Manages and coordinates production deployment and release processes' },
+  { icon: '📈', name: 'Value Stream Manager', desc: 'Ensures value stream meets customer and organizational requirements end to end' },
+  { icon: '🏗️', name: 'Architecture', desc: 'Defines technical standards and system design decisions' },
+  { icon: '📊', name: 'Data / Analytics', desc: 'Provides data insights and business intelligence to value stream' },
+  { icon: '🤝', name: 'Business Stakeholders', desc: 'Business partners impacted by or accountable for the value stream outcome' },
+  { icon: '🌐', name: 'Shared Services', desc: 'Cross-functional support teams (HR, Finance, Legal, etc.)' },
+  { icon: '🔧', name: 'Platform Engineering', desc: 'Maintains developer platform and internal tooling' },
+];
+
+const TOOLS = [
+  { icon: '📋', name: 'Kanban Board', desc: 'Visual work management and flow tracking', color: 'blue' },
+  { icon: '🏃', name: 'Jira / Sprint Board', desc: 'Agile backlog and sprint planning', color: 'blue' },
+  { icon: '🔄', name: 'CI/CD Pipeline', desc: 'Automated build, test, and deploy workflow', color: 'blue' },
+  { icon: '💬', name: 'Slack / Teams', desc: 'Async communication and incident alerts', color: 'blue' },
+  { icon: '📦', name: 'ServiceNow', desc: 'ITSM and shared work queue management', color: 'blue' },
+  { icon: '🗂️', name: 'Confluence / Wiki', desc: 'Documentation and knowledge management', color: 'blue' },
+  { icon: '📉', name: 'Monitoring / Grafana', desc: 'Production observability and alerting', color: 'blue' },
+  { icon: '🔁', name: 'GitHub / GitLab', desc: 'Version control and code review', color: 'blue' },
+  { icon: '🗃️', name: 'Value Stream Map', desc: 'Visual process mapping artifact (Miro, Lucid...)', color: 'blue' },
+  { icon: '📐', name: 'SAFe / LPM Board', desc: 'Portfolio Kanban and PI Planning board', color: 'blue' },
+  { icon: '🤖', name: 'ChatOps / Bots', desc: 'Automated notifications and workflow bots', color: 'blue' },
+  { icon: '📲', name: 'Mobile / iPad App', desc: 'Field-facing application for floor-level input', color: 'blue' },
+];
+
+// ── INIT ──
+function init() {
+  buildStepNav();
+  buildTeamGrid();
+  buildToolsGrid();
+  checkProcessEmpty();
+  checkProblemEmpty();
+}
+
+function buildStepNav() {
+  const nav = document.getElementById('stepNav');
+  nav.innerHTML = STEPS.map((s, i) => `
+    <div class="step-dot ${i === 0 ? 'active' : ''}" id="dot${i}" onclick="goTo(${i})" title="${s}">${i + 1}</div>
+    ${i < STEPS.length - 1 ? '<div class="step-connector"></div>' : ''}
+  `).join('');
+}
+
+function goTo(step) {
+  // Update step
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page' + step).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.step) === step);
+  });
+  document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.classList.remove('active', 'done');
+    if (i === step) dot.classList.add('active');
+    else if (i < step) dot.classList.add('done');
+  });
+  state.currentStep = step;
+
+  if (step === 3) populateProblemStepDropdown();
+  if (step === 5) buildDiagram();
+  if (step === 6) buildReport();
+
+  document.querySelector('main').scrollTop = 0;
+}
+
+// ── TEAM ──
+function buildTeamGrid() {
+  const grid = document.getElementById('teamGrid');
+  grid.innerHTML = TEAM_ROLES.map((r, i) => `
+    <div class="team-card ${state.selectedTeams.includes(i) ? 'selected' : ''}" onclick="toggleTeam(${i})" id="tc${i}">
+      <div class="check">✓</div>
+      <div class="role-icon">${r.icon}</div>
+      <div class="role-name">${r.name}</div>
+      <div class="role-desc">${r.desc}</div>
+    </div>
+  `).join('');
+}
+
+function toggleTeam(i) {
+  const idx = state.selectedTeams.indexOf(i);
+  if (idx === -1) state.selectedTeams.push(i);
+  else state.selectedTeams.splice(idx, 1);
+  const card = document.getElementById('tc' + i);
+  card.classList.toggle('selected', state.selectedTeams.includes(i));
+}
+
+function addCustomTeam() {
+  const role = document.getElementById('customRole').value.trim();
+  const resp = document.getElementById('customResp').value.trim();
+  const contact = document.getElementById('customContact').value.trim();
+  const size = document.getElementById('customSize').value.trim();
+  if (!role) { showToast('Please enter a role name'); return; }
+  state.customTeams.push({ role, resp, contact, size });
+  renderCustomTeams();
+  ['customRole','customResp','customContact','customSize'].forEach(id => document.getElementById(id).value = '');
+  showToast('Team member added');
+}
+
+function renderCustomTeams() {
+  const list = document.getElementById('customTeamList');
+  if (state.customTeams.length === 0) { list.innerHTML = ''; return; }
+  list.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' +
+    state.customTeams.map((t, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-radius:8px;font-size:13px;">
+        <div><strong>${t.role}</strong>${t.resp ? ' — ' + t.resp : ''}${t.contact ? ' · ' + t.contact : ''}${t.size ? ' (' + t.size + ' people)' : ''}</div>
+        <button class="btn btn-danger btn-sm" onclick="removeCustomTeam(${i})">Remove</button>
+      </div>
+    `).join('') + '</div>';
+}
+
+function removeCustomTeam(i) {
+  state.customTeams.splice(i, 1);
+  renderCustomTeams();
+}
+
+// ── PROCESS BLOCKS ──
+let blockId = 0;
+function addProcessBlock() {
+  blockId++;
+  const id = blockId;
+  state.processBlocks.push({ id, name: '', lt: '', va: '', ca: '', team: '' });
+  renderProcessBlocks();
+  checkProcessEmpty();
+}
+
+function renderProcessBlocks() {
+  const list = document.getElementById('processList');
+  list.innerHTML = state.processBlocks.map((b, idx) => `
+    <div class="process-block" id="pb${b.id}">
+      <div class="block-number">${idx + 1}</div>
+      <input class="block-input" placeholder="Step name..." value="${b.name}" oninput="updateBlock(${b.id},'name',this.value)" />
+      <input class="block-input" placeholder="Lead Time (e.g. 2 weeks)" value="${b.lt}" oninput="updateBlock(${b.id},'lt',this.value)" />
+      <input class="block-input" placeholder="VA Time (e.g. 3 hrs)" value="${b.va}" oninput="updateBlock(${b.id},'va',this.value)" />
+      <input class="block-input" placeholder="%C/A (e.g. 70%)" value="${b.ca}" oninput="updateBlock(${b.id},'ca',this.value)" />
+      <button class="btn btn-danger btn-sm" onclick="removeBlock(${b.id})">✕</button>
+    </div>
+  `).join('');
+  checkProcessEmpty();
+}
+
+function updateBlock(id, field, val) {
+  const b = state.processBlocks.find(b => b.id === id);
+  if (b) b[field] = val;
+}
+
+function removeBlock(id) {
+  state.processBlocks = state.processBlocks.filter(b => b.id !== id);
+  renderProcessBlocks();
+}
+
+function checkProcessEmpty() {
+  const empty = document.getElementById('processEmpty');
+  if (empty) empty.style.display = state.processBlocks.length === 0 ? 'block' : 'none';
+}
+
+// ── PROBLEMS ──
+function populateProblemStepDropdown() {
+  const sel = document.getElementById('probStep');
+  sel.innerHTML = '<option value="">Select step...</option>' +
+    state.processBlocks.map((b, i) => `<option value="${i}">${i + 1}. ${b.name || 'Step ' + (i+1)}</option>`).join('');
+}
+
+function addProblem() {
+  const desc = document.getElementById('probDesc').value.trim();
+  const step = document.getElementById('probStep').value;
+  const type = document.getElementById('probType').value;
+  const sev = document.getElementById('probSeverity').value;
+  const cause = document.getElementById('probCause').value.trim();
+  const fix = document.getElementById('probFix').value.trim();
+  const owner = document.getElementById('probOwner').value.trim();
+  if (!desc) { showToast('Please enter a problem description'); return; }
+  state.problems.push({ desc, step, type, sev, cause, fix, owner });
+  renderProblems();
+  ['probDesc','probCause','probFix','probOwner'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('probStep').value = '';
+  document.getElementById('probType').value = '';
+  showToast('Problem logged');
+}
+
+function renderProblems() {
+  const list = document.getElementById('problemList');
+  const empty = document.getElementById('problemEmpty');
+  if (state.problems.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = state.problems.map((p, i) => {
+    const stepName = p.step !== '' ? (state.processBlocks[p.step] ? state.processBlocks[p.step].name || 'Step ' + (parseInt(p.step)+1) : 'Step ' + (parseInt(p.step)+1)) : 'N/A';
+    const sevClass = p.sev === 'high' ? 'sev-high' : p.sev === 'med' ? 'sev-med' : 'sev-low';
+    const sevLabel = p.sev === 'high' ? 'HIGH' : p.sev === 'med' ? 'MEDIUM' : 'LOW';
+    return `
+      <div class="problem-item">
+        <div>
+          <div class="p-name">${p.desc}</div>
+          <div class="p-meta">${p.type || ''} · Step: ${stepName}${p.owner ? ' · Owner: ' + p.owner : ''}</div>
+          ${p.cause ? '<div class="p-meta" style="margin-top:4px;"><strong>Root cause:</strong> ' + p.cause + '</div>' : ''}
+          ${p.fix ? '<div class="p-meta" style="color:var(--green);"><strong>Fix:</strong> ' + p.fix + '</div>' : ''}
+        </div>
+        <span class="severity-badge ${sevClass}">${sevLabel}</span>
+        <button class="btn btn-danger btn-sm" onclick="removeProblem(${i})">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function checkProblemEmpty() {
+  const empty = document.getElementById('problemEmpty');
+  if (empty) empty.style.display = state.problems.length === 0 ? 'block' : 'none';
+}
+
+function removeProblem(i) {
+  state.problems.splice(i, 1);
+  renderProblems();
+}
+
+// ── TOOLS ──
+function buildToolsGrid() {
+  const grid = document.getElementById('toolsGrid');
+  grid.innerHTML = TOOLS.map((t, i) => `
+    <div class="tool-card ${state.selectedTools.includes(i) ? 'selected' : ''}" onclick="toggleTool(${i})" id="tool${i}">
+      <div class="t-icon">${t.icon}</div>
+      <div class="t-name">${t.name}</div>
+      <div class="t-desc">${t.desc}</div>
+    </div>
+  `).join('');
+}
+
+function toggleTool(i) {
+  const idx = state.selectedTools.indexOf(i);
+  if (idx === -1) state.selectedTools.push(i);
+  else state.selectedTools.splice(idx, 1);
+  document.getElementById('tool' + i).classList.toggle('selected', state.selectedTools.includes(i));
+}
+
+function addCustomTool() {
+  const name = document.getElementById('customToolName').value.trim();
+  const purpose = document.getElementById('customToolPurpose').value.trim();
+  if (!name) { showToast('Please enter a tool name'); return; }
+  state.customTools.push({ name, purpose });
+  renderCustomTools();
+  document.getElementById('customToolName').value = '';
+  document.getElementById('customToolPurpose').value = '';
+  showToast('Tool added');
+}
+
+function renderCustomTools() {
+  const list = document.getElementById('customToolList');
+  list.innerHTML = state.customTools.map((t, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--surface);border-radius:8px;font-size:13px;margin-bottom:6px;">
+      <div><strong>${t.name}</strong>${t.purpose ? ' — ' + t.purpose : ''}</div>
+      <button class="btn btn-danger btn-sm" onclick="removeCustomTool(${i})">Remove</button>
+    </div>
+  `).join('');
+}
+
+function removeCustomTool(i) {
+  state.customTools.splice(i, 1);
+  renderCustomTools();
+}
+
+// ── VSM DIAGRAM ──
+function buildDiagram() {
+  const container = document.getElementById('vsm-diagram');
+  const metricsEl = document.getElementById('summaryMetrics');
+
+  const orgName = document.getElementById('orgName').value || 'Customer';
+  const blocks = state.processBlocks;
+
+  // Summary metrics
+  const lt = document.getElementById('currentLT').value || 'N/A';
+  const va = document.getElementById('currentVA').value || 'N/A';
+  const ca = document.getElementById('currentCA').value || 'N/A';
+  const tlt = document.getElementById('targetLT').value || 'N/A';
+  metricsEl.innerHTML = `
+    <div class="metric-card accent">
+      <div class="label">Current Lead Time</div>
+      <div class="value">${lt}</div>
+      <div class="sub">Total end-to-end time</div>
+    </div>
+    <div class="metric-card blue">
+      <div class="label">Value-Added Time</div>
+      <div class="value">${va}</div>
+      <div class="sub">Time actually creating value</div>
+    </div>
+    <div class="metric-card" style="border-color:var(--yellow);">
+      <div class="label">Overall %C/A</div>
+      <div class="value" style="color:var(--yellow);">${ca}</div>
+      <div class="sub">Percent complete and accurate</div>
+    </div>
+    <div class="metric-card green">
+      <div class="label">Target Lead Time</div>
+      <div class="value">${tlt}</div>
+      <div class="sub">Future state goal</div>
+    </div>
+  `;
+
+  if (blocks.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">🗺️</div><p>Add process blocks in Step 3 to generate the diagram.</p></div>';
+    return;
+  }
+
+  // Build problem map per step index
+  const probMap = {};
+  state.problems.forEach(p => {
+    if (p.step !== '') {
+      if (!probMap[p.step]) probMap[p.step] = 0;
+      probMap[p.step]++;
+    }
+  });
+
+  let html = '';
+
+  // Start node
+  html += `
+    <div class="vsm-node">
+      <div class="vsm-box start">
+        <div class="vsm-box-title">📦 Customer Request</div>
+        <div class="vsm-metrics"><span class="vsm-metric">START</span></div>
+      </div>
+    </div>
+    <div class="vsm-arrow"><div class="vsm-arrow-line"></div></div>
+  `;
+
+  blocks.forEach((b, i) => {
+    const hasProb = probMap[i] > 0;
+    html += `
+      <div class="vsm-node">
+        <div class="vsm-box ${hasProb ? 'problem' : 'normal'}">
+          ${hasProb ? `<div class="problem-flag">!</div>` : ''}
+          <div class="vsm-box-title">${b.name || 'Step ' + (i+1)}</div>
+          <div class="vsm-metrics">
+            ${b.lt ? `<span class="vsm-metric">LT: ${b.lt}</span>` : ''}
+            ${b.va ? `<span class="vsm-metric">VA: ${b.va}</span>` : ''}
+            ${b.ca ? `<span class="vsm-metric">%C/A: ${b.ca}</span>` : ''}
+          </div>
+          ${hasProb ? `<div style="font-size:9px;color:var(--accent);margin-top:4px;font-family:var(--mono);">${probMap[i]} issue(s)</div>` : ''}
+        </div>
+      </div>
+      ${i < blocks.length - 1 ? '<div class="vsm-arrow"><div class="vsm-arrow-line"></div></div>' : ''}
+    `;
+  });
+
+  // End node
+  html += `
+    <div class="vsm-arrow"><div class="vsm-arrow-line"></div></div>
+    <div class="vsm-node">
+      <div class="vsm-box end">
+        <div class="vsm-box-title">✅ Value Delivered</div>
+        <div class="vsm-metrics"><span class="vsm-metric">END</span></div>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+// ── REPORT ──
+function buildReport() {
+  const el = document.getElementById('reportContent');
+  const org = document.getElementById('orgName').value || 'N/A';
+  const industry = document.getElementById('industry').value || 'N/A';
+  const vsn = document.getElementById('vsName').value || 'N/A';
+  const customer = document.getElementById('customer').value || 'N/A';
+  const trigger = document.getElementById('triggerRequest').value || 'N/A';
+  const pain = document.getElementById('painStatement').value || 'N/A';
+  const target = document.getElementById('targetOutcome').value || 'N/A';
+  const lt = document.getElementById('currentLT').value || 'N/A';
+  const va = document.getElementById('currentVA').value || 'N/A';
+  const ca = document.getElementById('currentCA').value || 'N/A';
+  const tlt = document.getElementById('targetLT').value || 'N/A';
+  const tca = document.getElementById('targetCA').value || 'N/A';
+  const tdate = document.getElementById('targetDate').value || 'N/A';
+
+  const selectedTeamNames = state.selectedTeams.map(i => TEAM_ROLES[i].name);
+  const allTeams = [...selectedTeamNames, ...state.customTeams.map(t => t.role)];
+  const allTools = [...state.selectedTools.map(i => TOOLS[i].name), ...state.customTools.map(t => t.name)];
+
+  const highProbs = state.problems.filter(p => p.sev === 'high').length;
+  const medProbs = state.problems.filter(p => p.sev === 'med').length;
+  const lowProbs = state.problems.filter(p => p.sev === 'low').length;
+
+  el.innerHTML = `
+    <!-- OVERVIEW -->
+    <div class="report-section">
+      <h3>📋 Case Overview</h3>
+      <table class="report-table">
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Organization</td><td><strong>${org}</strong></td></tr>
+        <tr><td>Industry</td><td>${industry}</td></tr>
+        <tr><td>Value Stream</td><td>${vsn}</td></tr>
+        <tr><td>Customer / End User</td><td>${customer}</td></tr>
+        <tr><td>Business Trigger</td><td>${trigger}</td></tr>
+        <tr><td>Pain Statement</td><td>${pain}</td></tr>
+        <tr><td>Target Outcome</td><td>${target}</td></tr>
+      </table>
+    </div>
+
+    <!-- METRICS -->
+    <div class="report-section">
+      <h3>📊 Value Stream Metrics</h3>
+      <table class="report-table">
+        <tr><th>Metric</th><th>Current State</th><th>Future State Target</th></tr>
+        <tr><td>Total Lead Time</td><td><strong style="color:var(--accent)">${lt}</strong></td><td><strong style="color:var(--green)">${tlt}</strong></td></tr>
+        <tr><td>Value-Added Time</td><td>${va}</td><td>—</td></tr>
+        <tr><td>Percent Complete and Accurate (%C/A)</td><td><strong style="color:var(--accent)">${ca}</strong></td><td><strong style="color:var(--green)">${tca}</strong></td></tr>
+        <tr><td>Target Achievement Date</td><td colspan="2">${tdate}</td></tr>
+      </table>
+    </div>
+
+    <!-- PROCESS BLOCKS -->
+    <div class="report-section">
+      <h3>🔲 Process Steps (${state.processBlocks.length} steps)</h3>
+      ${state.processBlocks.length === 0 ? '<p style="color:var(--text3);font-size:13.5px;">No process steps defined.</p>' : `
+      <table class="report-table">
+        <tr><th>#</th><th>Step Name</th><th>Lead Time</th><th>VA Time</th><th>%C/A</th><th>Issues</th></tr>
+        ${state.processBlocks.map((b, i) => {
+          const probCount = state.problems.filter(p => parseInt(p.step) === i).length;
+          return `<tr>
+            <td><strong>${i+1}</strong></td>
+            <td>${b.name || '—'}</td>
+            <td>${b.lt || '—'}</td>
+            <td>${b.va || '—'}</td>
+            <td>${b.ca || '—'}</td>
+            <td>${probCount > 0 ? `<span class="severity-badge sev-high">${probCount} issue(s)</span>` : '<span style="color:var(--green)">✓ Clean</span>'}</td>
+          </tr>`;
+        }).join('')}
+      </table>`}
+    </div>
+
+    <!-- TEAMS -->
+    <div class="report-section">
+      <h3>👥 Teams Involved (${allTeams.length} teams)</h3>
+      ${allTeams.length === 0 ? '<p style="color:var(--text3);font-size:13.5px;">No teams selected.</p>' : `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${allTeams.map(t => `<span style="padding:5px 12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:500;">${t}</span>`).join('')}
+      </div>`}
+    </div>
+
+    <!-- PROBLEMS -->
+    <div class="report-section">
+      <h3>⚠️ Problems and Waste (${state.problems.length} logged)</h3>
+      ${state.problems.length > 0 ? `
+      <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <span class="severity-badge sev-high">${highProbs} High</span>
+        <span class="severity-badge sev-med">${medProbs} Medium</span>
+        <span class="severity-badge sev-low">${lowProbs} Low</span>
+      </div>
+      <table class="report-table">
+        <tr><th>Problem</th><th>Step</th><th>Type</th><th>Severity</th><th>Countermeasure</th><th>Owner</th></tr>
+        ${state.problems.map((p, i) => {
+          const stepName = p.step !== '' ? (state.processBlocks[p.step] ? state.processBlocks[p.step].name || 'Step '+(parseInt(p.step)+1) : 'Step '+(parseInt(p.step)+1)) : 'N/A';
+          const sevClass = p.sev === 'high' ? 'sev-high' : p.sev === 'med' ? 'sev-med' : 'sev-low';
+          const sevLabel = p.sev === 'high' ? 'HIGH' : p.sev === 'med' ? 'MEDIUM' : 'LOW';
+          return `<tr>
+            <td>${p.desc}</td>
+            <td>${stepName}</td>
+            <td>${p.type || '—'}</td>
+            <td><span class="severity-badge ${sevClass}">${sevLabel}</span></td>
+            <td>${p.fix || '—'}</td>
+            <td>${p.owner || '—'}</td>
+          </tr>`;
+        }).join('')}
+      </table>` : '<p style="color:var(--text3);font-size:13.5px;">No problems logged.</p>'}
+    </div>
+
+    <!-- TOOLS -->
+    <div class="report-section">
+      <h3>🛠️ Tools and Systems (${allTools.length} selected)</h3>
+      ${allTools.length === 0 ? '<p style="color:var(--text3);font-size:13.5px;">No tools selected.</p>' : `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${allTools.map(t => `<span style="padding:5px 12px;background:var(--blue-light);border:1px solid #c0cef8;border-radius:20px;font-size:13px;font-weight:500;color:var(--blue);">${t}</span>`).join('')}
+      </div>`}
+    </div>
+
+    <!-- INSIGHT -->
+    <div class="report-section">
+      <h3>💡 Key Insights</h3>
+      <div class="insight-box">
+        <p>This value stream map reveals <strong>${state.problems.length} waste point(s)</strong> across <strong>${state.processBlocks.length} process step(s)</strong>, involving <strong>${allTeams.length} team(s)</strong>. The current lead time is <strong>${lt}</strong> with a value-added ratio driven by a %C/A of <strong>${ca}</strong>. By addressing the <strong>${highProbs} high-severity issue(s)</strong> first — focusing on rework, missing information, and handoff failures — the team can significantly reduce cycle time and approach the target state of <strong>${tlt}</strong> lead time and <strong>${tca}</strong> %C/A.</p>
+        <p style="margin-top:10px;">As Kim et al. (2016) demonstrate through the Nordstrom case, making the work visible is the critical first step. The real constraint is rarely the technology — it is the invisible process flaw that no one has ever mapped.</p>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:12px;">Reference: Kim, G., Humble, J., Debois, P., Willis, J., & Forsgren, N. (2016). <em>The DevOps Handbook.</em> IT Revolution Press.</p>
+    </div>
+  `;
+}
+
+// ── UTILS ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function clearAll() {
+  if (!confirm('Reset all data? This cannot be undone.')) return;
+  state.selectedTeams = [];
+  state.customTeams = [];
+  state.processBlocks = [];
+  state.problems = [];
+  state.selectedTools = [];
+  state.customTools = [];
+  blockId = 0;
+  document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+  document.querySelectorAll('select').forEach(el => el.value = '');
+  buildTeamGrid();
+  buildToolsGrid();
+  renderProcessBlocks();
+  renderProblems();
+  renderCustomTeams();
+  renderCustomTools();
+  goTo(0);
+  showToast('All data cleared');
+}
+
+init();
+</script>
+</body>
+</html>
